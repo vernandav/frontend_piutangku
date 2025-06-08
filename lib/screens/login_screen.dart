@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: const Color(0xFF193149),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(vertical: 90.0, horizontal: 16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [

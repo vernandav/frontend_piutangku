@@ -28,7 +28,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       final res = await http.get(
-        Uri.parse('http://localhost:3000/api/transaksi/riwayat'),
+        Uri.parse('http://192.168.199.200:3000/api/transaksi/riwayat'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -66,7 +66,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     final token = prefs.getString('token');
 
     final res = await http.delete(
-      Uri.parse('http://localhost:3000/api/transaksi/delete/$id'),
+      Uri.parse('http://192.168.199.200:3000/api/transaksi/delete/$id'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -233,7 +233,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            mainAxisExtent: 210,
+                            mainAxisExtent: 226,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
                           ),
@@ -270,7 +270,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                                 ),
                                 padding: const EdgeInsets.all(12),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     Center(
                                       child: Text(
@@ -283,28 +284,32 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                                     Center(child: Text(item['nama'])),
                                     const SizedBox(height: 8),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         const Text("Total"),
                                         Text("Rp ${item['total']}"),
                                       ],
                                     ),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         const Text("Cicilan"),
                                         Text("Rp ${item['cicilan']}"),
                                       ],
                                     ),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         const Text("Sisa"),
                                         Text("Rp $sisa"),
                                       ],
                                     ),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         const Text("Status"),
                                         Text("${item['status']}"),
@@ -320,14 +325,18 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
                                         TextButton(
                                           onPressed: () async {
                                             final result = await Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (_) => FormTransaksiScreen(editId: item['id']),
+                                                builder:
+                                                    (_) => FormTransaksiScreen(
+                                                      editId: item['id'],
+                                                    ),
                                               ),
                                             );
                                             if (result == true) {
@@ -336,7 +345,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                                           },
                                           child: const Text(
                                             "Edit",
-                                            style: TextStyle(color: Colors.grey),
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                            ),
                                           ),
                                         ),
                                         TextButton(
@@ -345,7 +356,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                                           },
                                           child: const Text(
                                             "Delete",
-                                            style: TextStyle(color: Colors.grey),
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                            ),
                                           ),
                                         ),
                                       ],

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class FormTransaksiScreen extends StatefulWidget {
-  final int? editId; // Tambahkan ID opsional untuk edit
+  final int? editId;
   const FormTransaksiScreen({super.key, this.editId});
 
   @override
@@ -37,7 +37,7 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final res = await http.get(
-      Uri.parse('http://localhost:3000/api/transaksi/edit/$id'),
+      Uri.parse('http://192.168.199.200:3000/api/transaksi/edit/$id'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -48,12 +48,13 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
         namaLawanController.text = data['nama_lawan'];
         totalController.text =
             data['total'].toString().replaceAll(RegExp(r'\D'), '');
-        tanggalMulaiController.text = data['tanggal_mulai'].substring(0, 10);
+        tanggalMulaiController.text =
+            _formatDateLocal(data['tanggal_mulai']);
         metodeCicilan = data['metode_cicilan'];
         targetPelunasanController.text =
             data['target_pelunasan_bulan']?.toString() ?? '';
         jatuhTempoController.text =
-            data['tanggal_jatuh_tempo'].substring(0, 10);
+            _formatDateLocal(data['tanggal_jatuh_tempo']);
       });
     }
     setState(() => isLoading = false);
@@ -64,8 +65,8 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
     final token = prefs.getString('token');
 
     final url = widget.editId == null
-        ? 'http://localhost:3000/api/transaksi/store'
-        : 'http://localhost:3000/api/transaksi/update/${widget.editId}';
+        ? 'http://192.168.199.200:3000/api/transaksi/store'
+        : 'http://192.168.199.200:3000/api/transaksi/update/${widget.editId}';
 
     final method = widget.editId == null ? http.post : http.patch;
 
@@ -111,8 +112,7 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
         child: Column(
           children: [
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               child: Row(
                 children: [
                   Container(
@@ -125,9 +125,9 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
-                  Expanded(
+                  const Expanded(
                     child: Center(
-                      child: const Text(
+                      child: Text(
                         'Form Transaksi',
                         style: TextStyle(
                           fontSize: 22,
@@ -151,10 +151,7 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFFD0DFE7),
-                          Color(0xFF6B8E9C),
-                        ],
+                        colors: [Color(0xFFD0DFE7), Color(0xFF6B8E9C)],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
@@ -188,8 +185,8 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: namaLawanController,
-                            decoration:
-                                customInputDecoration('Nama Lawan Utang/Piutang'),
+                            decoration: customInputDecoration(
+                                'Nama Lawan Utang/Piutang'),
                             validator: (val) => val!.isEmpty
                                 ? 'Masukkan nama lawan transaksi'
                                 : null,
@@ -207,26 +204,82 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
                             controller: tanggalMulaiController,
                             readOnly: true,
                             onTap: () async {
-                              DateTime? pickedDate = await showDatePicker(
+                              final pickedDate = await showDatePicker(
                                 context: context,
                                 initialDate: DateTime.now(),
                                 firstDate: DateTime(2000),
-                                lastDate: DateTime(2101),
+                                lastDate: DateTime(2100),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.light().copyWith(
+                                      colorScheme: const ColorScheme.light(
+                                        primary: Color(0xFF6B8E9C),
+                                        onPrimary: Colors.white,
+                                        surface: Color(0xFFD0DFE7),
+                                        onSurface: Colors.black,
+                                      ),
+                                      dialogBackgroundColor:
+                                          Color(0xFFD0DFE7),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
                               );
-
                               if (pickedDate != null) {
                                 setState(() {
                                   tanggalMulaiController.text =
-                                      pickedDate.toIso8601String().substring(0, 10); // YYYY-MM-DD
+                                      _formatDateLocal(pickedDate.toIso8601String());
                                 });
                               }
                             },
-                            decoration: customInputDecoration('Tanggal Mulai'),
-                            validator: (val) => val!.isEmpty ? 'Masukkan tanggal mulai' : null,
+                            decoration:
+                                customInputDecoration('Tanggal Mulai'),
+                            validator: (val) =>
+                                val!.isEmpty ? 'Masukkan tanggal mulai' : null,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: jatuhTempoController,
+                            readOnly: true,
+                            onTap: () async {
+                              final pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2100),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.light().copyWith(
+                                      colorScheme: const ColorScheme.light(
+                                        primary: Color(0xFF6B8E9C),
+                                        onPrimary: Colors.white,
+                                        surface: Color(0xFFD0DFE7),
+                                        onSurface: Colors.black,
+                                      ),
+                                      dialogBackgroundColor:
+                                          Color(0xFFD0DFE7),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (pickedDate != null) {
+                                setState(() {
+                                  jatuhTempoController.text =
+                                      _formatDateLocal(pickedDate.toIso8601String());
+                                });
+                              }
+                            },
+                            decoration:
+                                customInputDecoration('Tanggal Jatuh Tempo'),
+                            validator: (val) => val!.isEmpty
+                                ? 'Masukkan tanggal jatuh tempo'
+                                : null,
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
-                            decoration: customInputDecoration('Metode Cicilan'),
+                            decoration:
+                                customInputDecoration('Metode Cicilan'),
                             value: metodeCicilan,
                             items: const [
                               DropdownMenuItem(
@@ -238,61 +291,37 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
                             ],
                             onChanged: (val) =>
                                 setState(() => metodeCicilan = val),
-                            validator: (val) => val == null
-                                ? 'Pilih metode cicilan'
-                                : null,
+                            validator: (val) =>
+                                val == null ? 'Pilih metode cicilan' : null,
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: targetPelunasanController,
-                            decoration: customInputDecoration('Target Pelunasan'),
+                            decoration:
+                                customInputDecoration('Target Pelunasan'),
                             keyboardType: TextInputType.number,
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: jatuhTempoController,
-                            readOnly: true,
-                            onTap: () async {
-                              DateTime? pickedDate = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2101),
-                              );
-
-                              if (pickedDate != null) {
-                                setState(() {
-                                  jatuhTempoController.text =
-                                      pickedDate.toIso8601String().substring(0, 10);
-                                });
-                              }
-                            },
-                            decoration: customInputDecoration('Tanggal Jatuh Tempo'),
-                            validator: (val) => val!.isEmpty ? 'Masukkan tanggal jatuh tempo' : null,
                           ),
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  submitTransaksi();
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF387092),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                   side: const BorderSide(
-                                    color: Color(0xFF193149),
-                                    width: 0.5,
-                                  ),
+                                      color: Color(0xFF193149), width: 0.5),
                                 ),
                                 shadowColor: Colors.black.withOpacity(0.3),
                                 elevation: 8,
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 16),
                               ),
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  submitTransaksi();
-                                }
-                              },
                               child: const Text(
                                 'Simpan',
                                 style: TextStyle(
@@ -332,9 +361,12 @@ class _FormTransaksiScreenState extends State<FormTransaksiScreen> {
         borderSide:
             const BorderSide(color: Color.fromARGB(255, 106, 106, 106)),
       ),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
     );
+  }
+
+  String _formatDateLocal(String isoDate) {
+    final date = DateTime.parse(isoDate).toLocal();
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
   }
 }

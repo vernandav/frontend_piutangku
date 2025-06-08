@@ -1,11 +1,10 @@
 import 'dart:convert';
-import 'dart:html' as html;
-import 'dart:typed_data';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class FormCicilanScreen extends StatefulWidget {
   final int transaksiId;
@@ -18,31 +17,19 @@ class FormCicilanScreen extends StatefulWidget {
 class _FormCicilanScreenState extends State<FormCicilanScreen> {
   final jumlahController = TextEditingController();
   final tanggalBayarController = TextEditingController();
-  Uint8List? imageBytes;
-  html.File? pickedFile;
+  File? imageFile;
 
   Future<void> pickImage() async {
-    final input = html.FileUploadInputElement()..accept = 'image/*';
-    input.click();
-    input.onChange.listen((event) {
-      final file = input.files!.first;
-      final reader = html.FileReader();
-
-      reader.readAsArrayBuffer(file);
-      reader.onLoadEnd.listen((event) {
-        setState(() {
-          imageBytes = reader.result as Uint8List;
-          pickedFile = file;
-        });
-      });
-    });
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => imageFile = File(picked.path));
+    }
   }
 
   Future<void> submitCicilan() async {
     if (jumlahController.text.isEmpty ||
         tanggalBayarController.text.isEmpty ||
-        imageBytes == null ||
-        pickedFile == null) {
+        imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Harap lengkapi semua data')),
       );
@@ -53,30 +40,36 @@ class _FormCicilanScreenState extends State<FormCicilanScreen> {
     final token = prefs.getString('token');
 
     final uri = Uri.parse(
-        'http://localhost:3000/api/cicilan/store/${widget.transaksiId}');
+      'http://192.168.199.200:3000/api/cicilan/store/${widget.transaksiId}',
+    );
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'
       ..fields['jumlah'] = jumlahController.text
       ..fields['tanggal_bayar'] = tanggalBayarController.text
-      ..files.add(http.MultipartFile.fromBytes(
+      ..files.add(await http.MultipartFile.fromPath(
         'bukti_transfer_url',
-        imageBytes!,
-        filename: pickedFile!.name,
+        imageFile!.path,
         contentType: MediaType('image', 'jpeg'),
       ));
 
     final response = await request.send();
+    final respStr = await response.stream.bytesToString();
 
     if (response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cicilan berhasil ditambahkan')),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } else {
-      final respStr = await response.stream.bytesToString();
-      debugPrint('ERROR: $respStr');
+      String errorMsg = 'Gagal menambahkan cicilan';
+      try {
+        final errorJson = jsonDecode(respStr);
+        if (errorJson['message'] != null) {
+          errorMsg = errorJson['message'];
+        }
+      } catch (_) {}
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal menambahkan cicilan')),
+        SnackBar(content: Text(errorMsg)),
       );
     }
   }
@@ -158,6 +151,20 @@ class _FormCicilanScreenState extends State<FormCicilanScreen> {
                             initialDate: DateTime.now(),
                             firstDate: DateTime(2000),
                             lastDate: DateTime(2100),
+                            builder: (context, child) {
+                              return Theme(
+                                data: ThemeData.light().copyWith(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: Color(0xFF6B8E9C),
+                                    onPrimary: Colors.white,
+                                    surface: Color(0xFFD0DFE7),
+                                    onSurface: Colors.black,
+                                  ),
+                                  dialogBackgroundColor: Color(0xFFD0DFE7),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
                           if (picked != null) {
                             tanggalBayarController.text =
@@ -167,8 +174,10 @@ class _FormCicilanScreenState extends State<FormCicilanScreen> {
                         decoration: customInputDecoration('Tanggal Bayar'),
                       ),
                       const SizedBox(height: 16),
-                      const Text('Bukti Transfer',
-                          style: TextStyle(fontWeight: FontWeight.w400)),
+                      const Text(
+                        'Bukti Transfer',
+                        style: TextStyle(fontWeight: FontWeight.w400),
+                      ),
                       const SizedBox(height: 8),
                       SizedBox(
                         width: 200,
@@ -180,8 +189,7 @@ class _FormCicilanScreenState extends State<FormCicilanScreen> {
                             style: TextStyle(color: Colors.black87),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 248, 248, 249),
+                            backgroundColor: const Color(0xFFF8F8F9),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24),
                               side: const BorderSide(
@@ -193,12 +201,12 @@ class _FormCicilanScreenState extends State<FormCicilanScreen> {
                           ),
                         ),
                       ),
-                      if (imageBytes != null)
+                      if (imageFile != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.memory(imageBytes!, height: 100),
+                            child: Image.file(imageFile!, height: 100),
                           ),
                         ),
                       const SizedBox(height: 24),
@@ -218,8 +226,7 @@ class _FormCicilanScreenState extends State<FormCicilanScreen> {
                               ),
                               shadowColor: Colors.black.withOpacity(0.3),
                               elevation: 8,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             child: const Text(
                               'Simpan',
@@ -231,7 +238,7 @@ class _FormCicilanScreenState extends State<FormCicilanScreen> {
                             ),
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -251,15 +258,16 @@ class _FormCicilanScreenState extends State<FormCicilanScreen> {
       filled: true,
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(30),
-        borderSide: const BorderSide(color: Color.fromARGB(255, 54, 54, 54), width: 1),
+        borderSide: const BorderSide(
+          color: Color.fromARGB(255, 54, 54, 54),
+          width: 1,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(30),
         borderSide: const BorderSide(color: Color.fromARGB(255, 106, 106, 106)),
       ),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
     );
   }
 }
