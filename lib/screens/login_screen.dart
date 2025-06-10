@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               const Text(
-                'Piutangku',
+                'PiUtangku',
                 style: TextStyle(
                   fontSize: 32,
                   fontFamily: 'Righteous',

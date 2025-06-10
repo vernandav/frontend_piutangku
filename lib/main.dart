@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Piutangku',
+      title: 'PiUtangku',
       debugShowCheckedModeBanner: false,
       initialRoute: '/login',
       routes: {

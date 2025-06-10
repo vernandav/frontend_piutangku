@@ -24,7 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             children: [
               const Text(
-                'Piutangku',
+                'PiUtangku',
                 style: TextStyle(
                   fontSize: 32,
                   fontFamily: 'Righteous',
